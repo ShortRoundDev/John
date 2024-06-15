@@ -5,6 +5,8 @@
 #include "App.h"
 #include "Grid.h"
 
+#include <nlohmann/json.hpp>
+
 MapLoader::MapLoader()
 {
 
@@ -64,6 +66,14 @@ bool MapLoader::populateMap()
 		tile->entityToken = entity;
 		if (entity->config != NULL) {
 			tile->entityConfig = std::string(entity->config);
+			try
+			{
+                tile->entityJsonConfig = nlohmann::json::parse(entity->config);
+            }
+			catch (nlohmann::json::parse_error& e)
+			{
+				tile->entityJsonConfig = nlohmann::json();
+			}
 		}
 		tile->entityTexture = APP->textures[APP->idTextureMapping[entity->entityId]];
 		
@@ -76,6 +86,14 @@ bool MapLoader::populateMap()
 			tile->token = level->walls[idx];
 			if (tile->token.message != NULL) {
 				tile->tileConfig = std::string(tile->token.message);
+				try
+				{
+                    tile->tileJsonConfig = nlohmann::json::parse(tile->token.message);
+                }
+				catch (nlohmann::json::parse_error& e)
+				{
+                    tile->tileJsonConfig = nlohmann::json();
+                }
 			}
 			tile->isDoor = tile->token.isDoor != 0;
 			tile->texture[0] = APP->textures[APP->idTextureMapping[tile->token.floor]];

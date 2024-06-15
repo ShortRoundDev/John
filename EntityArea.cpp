@@ -29,57 +29,26 @@ void EntityArea::loadEntities()
 		MessageBoxA(NULL, (std::string("Entities.conf: ") + strerror(errno)).c_str(), NULL, MB_OK);
 		return;
 	}
-	fseek(fp, 0, SEEK_END);
-	size_t fileSize = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	char* text = (char*)calloc(fileSize, sizeof(char) + 1);
-	fread(text, sizeof(char), fileSize, fp);
-	fclose(fp);
 
-	char* c = text;
+	static char buffer[128];
+
 	int i = 0;
-	while (*c != 0)
+	while (fgets(buffer, 127, fp))
 	{
-		char* key = c;
-		// find =
-		for (; *c != '=' && *c != '\n' && *c != 0; c++);
-		if (*c == '\n')
+		buffer[127] = 0;
+		std::string line = buffer;
+		EntityMetadata metadata;
+		Texture* texture = nullptr;
+		if (line[line.length() - 1] == '\n')
 		{
-			// fucked up line. no =. Skip line. Maybe warn?
-			c++;
-			continue;
+			line = line.substr(0, line.length() - 1);
 		}
-		else if (*c == 0)
+		if (APP->tryLoadEntityConfig("Resources/Entities/" + line + ".conf", metadata) && APP->tryLoadTexture(metadata.texture, line, &texture))
 		{
-			// fucked up line. no =. End of file. break loop. Maybe warn?
-			break;
+			APP->idTextureMapping[metadata.id] = line;
+			APP->entityMetadata[metadata.id] = metadata.fields;
+			auto button = new EntityButton(i++, metadata.id, texture, line);
+			addChild(button);
 		}
-		else
-		{
-			*c = 0;
-			c++;
-		}
-		char* value = c;
-
-		//find end of line or end of file
-		for (; *c != '\n' && *c != 0; c++);
-		if (*c == '\n')
-		{
-			*c = 0;
-			c++;
-		}
-
-		int id = atoi(value);
-
-		Texture* t = NULL;
-		if (!APP->tryLoadTexture(std::string("Resources/Entities/") + key + ".png", key, &t))
-		{
-			MessageBoxA(NULL, ("Failed to load entity thumb for " + std::string(key)).c_str(), NULL, MB_OK);
-			continue;
-		}
-		APP->idTextureMapping[id] = key;
-
-		children.push_back(new EntityButton(i++, id, t, std::string(key)));
-
 	}
 }

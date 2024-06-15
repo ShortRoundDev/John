@@ -121,7 +121,7 @@ void App::createDom()
 
 void App::update()
 {
-
+	rootDom->checkAddRemove();
 }
 
 void App::draw()
@@ -130,10 +130,6 @@ void App::draw()
 	SDL_RenderClear(renderer);
 
 	rootDom->draw({ 0, 0, width, height});
-	if (textbox != nullptr)
-	{
-		textbox->draw({ 0, 0, width, height });
-	}
 
 	SDL_RenderPresent(renderer);
 }
@@ -171,15 +167,8 @@ void App::events()
 				break;
 			}
 			}
-
-			if (textbox != nullptr)
-			{
-				textbox->handleMouseDown({ 0, 0, width, height }, e);
-			}
-			else
-			{
-				rootDom->handleMouseDown({ 0, 0, width, height }, e);
-			}
+			APP->setActive(nullptr); // clear active input, it will be reset by the onmouseDown of child node later
+			rootDom->handleMouseDown({ 0, 0, width, height }, e);
 			break;
 		}
 		case SDL_MOUSEBUTTONUP:
@@ -204,20 +193,7 @@ void App::events()
 			}
 
 			dragging = false;
-			if (textbox != nullptr)
-			{
-				textbox->handleMouseUp({ 0, 0, width, height }, e);
-				if (closeTextbox)
-				{
-					delete textbox;
-					textbox = nullptr;
-					closeTextbox = false;
-				}
-			}
-			else
-			{
-				rootDom->handleMouseUp({ 0, 0, width, height }, e);
-			}
+			rootDom->handleMouseUp({ 0, 0, width, height }, e);
 			break;
 		}
 		case SDL_MOUSEMOTION:
@@ -234,39 +210,25 @@ void App::events()
 			}
 			if (dragging)
 			{
-				if (textbox != nullptr)
-				{
-					textbox->handleDrag({ 0, 0, width, height }, e);
-				}
-				else
-				{
-					rootDom->handleDrag({ 0, 0 }, e);
-				}
+				rootDom->handleDrag({ 0, 0 }, e);
 			}
 			break;
 		}
 		case SDL_MOUSEWHEEL:
 		{
-			if (textbox != nullptr)
-			{
-				textbox->handleMouseScroll({ 0, 0, width, height }, e);
-			}
-			else
-			{
-				rootDom->handleMouseScroll({ 0, 0 }, e);
-			}
+			rootDom->handleMouseScroll({ 0, 0 }, e);
 			break;
 		}
 		case SDL_KEYDOWN:
 		{
 			keymap[e.key.keysym.scancode] = true;
-			if (textbox == nullptr)
+			if (activeInputText != nullptr)
 			{
-				rootDom->handleKeyDown(e);
+				activeInputText->handleKeyDown(e);
 			}
 			else
 			{
-				textbox->handleKeyDown(e);
+				rootDom->handleKeyDown(e);
 			}
 			if (e.key.keysym.scancode == SDL_SCANCODE_F11)
 			{
@@ -278,23 +240,14 @@ void App::events()
 		case SDL_KEYUP:
 		{
 			keymap[e.key.keysym.scancode] = false;
-			if (textbox == nullptr)
-			{
-				rootDom->handleKeyUp(e);
-			}
+			rootDom->handleKeyUp(e);
 			break;
 		}
 		case SDL_TEXTINPUT:
 		{
-			if (textbox != nullptr)
+			if (activeInputText != nullptr)
 			{
-				TextBox* box = ((TextBox*)textbox);
-				std::string* textPtr = box->text;
-				if (textPtr->length() >= 1023)
-					break;
-				std::cout << textPtr->length() << std::endl;				
-				*textPtr = textPtr->substr(0, box->cursorPos) + e.text.text[0] + textPtr->substr(box->cursorPos, textPtr->length());
-				box->cursorPos++;
+				activeInputText->handleTextInput(e);
 			}
 			break;
 		}
@@ -335,6 +288,62 @@ bool App::tryLoadTexture(_In_ std::string path, _In_ std::string alias, _Out_ Te
 	return true;
 }
 
+_Success_(return)
+bool App::tryLoadEntityConfig(std::string name, EntityMetadata& metadata)
+{
+	static char buffer[128];
+	FILE* fp = fopen((name).c_str(), "r");
+	if (fp == NULL)
+	{
+        MessageBoxA(NULL, (name + ": " + strerror(errno)).c_str(), NULL, MB_OK);
+        return false;
+    }
+
+	while (fgets(buffer, 127, fp))
+	{
+		buffer[127] = 0;
+		std::string line = buffer;
+		
+		auto pos = line.find('=');
+		if (pos == std::string::npos)
+		{
+            continue;
+        }
+
+		if (line[line.length() - 1] == '\n')
+		{
+			line = line.substr(0, line.length() - 1);
+		}
+		std::string key = line.substr(0, pos);
+		std::string value = line.substr(pos + 1, line.length() - pos - 1);
+
+		if (key[0] == '#')
+		{
+			key = key.substr(1, key.length() - 1);
+			if (key == "id")
+			{
+                metadata.id = atoi(value.c_str());
+            }
+			else if (key == "texture")
+			{
+				metadata.texture = value;
+            }
+			continue;
+		}
+		else
+		{
+            EntityMetadataField field;
+            field.name = key;
+            field.type = getFieldType(value);
+			metadata.fields.push_back(field);
+		}
+	}
+
+	fclose(fp);
+	return true;
+}
+
+
 void App::drawText(int x, int y, const char* text)
 {
 	int i = 0;
@@ -354,7 +363,7 @@ void App::drawText(int x, int y, const char* text)
 	}
 }
 
-void App::drawTextBox(const SDL_Rect& container, const char* text, int cursor)
+void App::drawTextBox(const SDL_Rect& container, const char* text, int cursor, bool drawCursor, bool wrap)
 {
 	int pos = 0;
 	int i = 0;
@@ -362,13 +371,21 @@ void App::drawTextBox(const SDL_Rect& container, const char* text, int cursor)
 	int dy = 0;
 	int x = container.x;
 	int y = container.y;
+	int totalLength = 0;
+	int noWrapOffset = 0;
+
+	auto maxWidth = (container.w - 14) / 16;
+	if (!wrap && cursor > maxWidth)
+	{
+		noWrapOffset = (cursor - maxWidth) * 18;
+	}
 	for (const char* c = text; *c != 0; c++, i++, pos++)
 	{
 		x = container.x;
 		y = container.y;
 
-		dx = (i * 18);
-		if (dx > container.w - 14)
+		dx = (i * 18) - noWrapOffset;
+		if (wrap && dx > container.w - 14)
 		{
 			dx = 0;
 			i = 0;
@@ -391,15 +408,15 @@ void App::drawTextBox(const SDL_Rect& container, const char* text, int cursor)
 			14, 20
 		};
 		SDL_Rect dst = {
-			x + dx - 8, y + dy - 12,
+			x + dx, y + dy - 12,
 			28, 40
 		};
 
-		if (pos == cursor)
+		if (drawCursor && pos == cursor)
 		{
 			SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
 			SDL_Rect line = {
-				x + dx - 2, y + dy - 4,
+				x + dx + 2, y + dy - 4,
 				2, 19 + 8
 			};
 			SDL_RenderFillRect(renderer, &line);
@@ -407,11 +424,11 @@ void App::drawTextBox(const SDL_Rect& container, const char* text, int cursor)
 
 		SDL_RenderCopy(renderer, letters->texture, &src, &dst);
 	}
-	if (cursor == strlen(text))
+	if (drawCursor && cursor == strlen(text))
 	{
 		SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
 		SDL_Rect line = {
-			x + dx - 2 + 14, y + dy - 4,
+			x + dx + (cursor ? 20 : 0), y + dy - 4,
 			2, 19 + 8
 		};
 		SDL_RenderFillRect(renderer, &line);
@@ -420,5 +437,20 @@ void App::drawTextBox(const SDL_Rect& container, const char* text, int cursor)
 
 void App::showTextBox(std::string* text)
 {
-	this->textbox = new TextBox(text);
+	rootDom->addChild(new TextBox(text));
+}
+
+void App::showTextBox(std::string initialValue, std::function<void(std::string)> onSave)
+{
+	rootDom->addChild(new TextBox(initialValue, onSave));
+}
+
+void App::setActive(UINode* activeInputText)
+{
+	this->activeInputText = activeInputText;
+}
+
+bool App::isActive(UINode* node)
+{
+	return node == this->activeInputText;
 }

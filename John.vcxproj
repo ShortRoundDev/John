@@ -120,6 +120,7 @@
       <PreprocessorDefinitions>SDL_MAIN_HANDLED;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SDL2_PATH)/include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -153,7 +154,9 @@
     <ClCompile Include="CloseTextBoxButton.cpp" />
     <ClCompile Include="EntityArea.cpp" />
     <ClCompile Include="EntityButton.cpp" />
+    <ClCompile Include="EntityMetadata.cpp" />
     <ClCompile Include="FileHandling.cpp" />
+    <ClCompile Include="FloatInput.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="LayerEditor.cpp" />
     <ClCompile Include="LayerIncrementorButton.cpp" />
@@ -180,7 +183,9 @@
     <ClInclude Include="CloseTextBoxButton.h" />
     <ClInclude Include="EntityArea.h" />
     <ClInclude Include="EntityButton.h" />
+    <ClInclude Include="EntityMetadata.h" />
     <ClInclude Include="FileHandling.h" />
+    <ClInclude Include="FloatInput.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="LayerEditor.h" />
     <ClInclude Include="LayerIncrementorButton.h" />
@@ -202,6 +207,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\entities.conf" />
+    <None Include="Resources\Entities\Barrel.conf" />
+    <None Include="Resources\Entities\LevelName.conf" />
     <None Include="Resources\tiles.conf" />
     <None Include="vcpkg.json" />
   </ItemGroup>

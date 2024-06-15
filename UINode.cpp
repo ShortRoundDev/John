@@ -46,7 +46,7 @@ UINode::UINode(Style style, int totalChildren, ...) : UINode(style)
 	for (int i = 0; i < totalChildren; i++)
 	{
 		auto child = va_arg(args, UINode*);
-		this->children.push_back(child);
+		addChild(child);
 	}
 }
 
@@ -150,9 +150,13 @@ bool UINode::handleMouseDown(SDL_Rect container, const SDL_Event& e)
 	if (SDL_PointInRect(&mouse, &transformedDim))
 	{
 		bool bubble = true;
-		for (const auto& c : children)
+		for (auto c = children.rbegin(); c != children.rend(); c++)
 		{
-			bubble &= c->handleMouseDown({ transformedDim.x, transformedDim.y - scroll, transformedDim.w, transformedDim.h }, e);
+			bubble &= (*c)->handleMouseDown({ transformedDim.x, transformedDim.y - scroll, transformedDim.w, transformedDim.h }, e);
+			if (!bubble) //allow siblings to halt propagation
+			{
+                break;
+            }
 		}
 
 		if (bubble)
@@ -189,9 +193,13 @@ bool UINode::handleDrag(SDL_Rect container, const SDL_Event& e)
 	if (SDL_PointInRect(&mouse, &transformedDim))
 	{
 		bool bubble = true;
-		for (const auto& c : children)
+		for (auto c = children.rbegin(); c != children.rend(); c++)
 		{
-			bubble &= c->handleDrag({ transformedDim.x, transformedDim.y - scroll, transformedDim.w, transformedDim.h }, e);
+			bubble &= (*c)->handleDrag({ transformedDim.x, transformedDim.y - scroll, transformedDim.w, transformedDim.h }, e);
+			if (!bubble) //allow siblings to halt propagation
+			{
+                break;
+            }
 		}
 
 		if (bubble)
@@ -228,9 +236,13 @@ bool UINode::handleMouseUp(SDL_Rect container, const SDL_Event& e)
 	if (SDL_PointInRect(&mouse, &transformedDim))
 	{
 		bool bubble = true;
-		for (const auto& c : children)
+		for (auto c = children.rbegin(); c != children.rend(); c++)
 		{
-			bubble &= c->handleMouseUp({ transformedDim.x, transformedDim.y - scroll, transformedDim.w, transformedDim.h }, e);
+			bubble &= (*c)->handleMouseUp({ transformedDim.x, transformedDim.y - scroll, transformedDim.w, transformedDim.h }, e);
+			if (!bubble) //allow siblings to halt propagation
+			{
+                break;
+            }
 		}
 
 		if (bubble)
@@ -270,9 +282,13 @@ bool UINode::handleMouseScroll(SDL_Rect container, const SDL_Event& e)
 	if (SDL_PointInRect(&mouse, &transformedDim))
 	{
 		bool bubble = true;
-		for (const auto& c : children)
+		for (auto c = children.rbegin(); c != children.rend(); c++)
 		{
-			bubble &= c->handleMouseScroll(transformedDim, e);
+			bubble &= (*c)->handleMouseScroll(transformedDim, e);
+			if (!bubble) //allow siblings to halt propagation
+			{
+                break;
+            }
 		}
 
 		if (bubble && style.scrollable)
@@ -297,9 +313,13 @@ bool UINode::handleMouseScroll(SDL_Rect container, const SDL_Event& e)
 bool UINode::handleKeyDown(const SDL_Event& e)
 {
 	bool bubble = true;
-	for (const auto& c : children)
+	for (auto c = children.rbegin(); c != children.rend(); c++)
 	{
-		bubble &= c->handleKeyDown(e);
+		bubble &= (*c)->handleKeyDown(e);
+		if (!bubble) //allow siblings to halt propagation
+		{
+            break;
+        }
 	}
 
 	if (bubble)
@@ -318,9 +338,14 @@ bool UINode::onKeyDown(const SDL_Event& e)
 bool UINode::handleKeyUp(const SDL_Event& e)
 {
 	bool bubble = true;
-	for (const auto& c : children)
+	for (auto c = children.rbegin(); c != children.rend(); c++)
 	{
-		bubble &= c->handleKeyUp(e);
+		bubble &= (*c)->handleKeyUp(e);
+		if (!bubble) //allow siblings to halt propagation
+		{
+            break;
+        
+		}
 	}
 
 	if (bubble)
@@ -331,9 +356,83 @@ bool UINode::handleKeyUp(const SDL_Event& e)
 	return bubble;
 }
 
+bool UINode::handleTextInput(const SDL_Event& e)
+{
+    bool bubble = true;
+	for (auto c = children.rbegin(); c != children.rend(); c++)
+	{
+        bubble &= (*c)->handleTextInput(e);
+		if (!bubble) //allow siblings to halt propagation
+		{
+            break;
+		}
+    }
+
+	if (bubble)
+	{
+        bubble &= onTextInput(e);
+    }
+
+    return bubble;
+}
+
+bool UINode::onTextInput(const SDL_Event& e)
+{
+	return true;
+}
+
+bool UINode::isActive()
+{
+	return APP->isActive(this);
+}
+
 bool UINode::onKeyUp(const SDL_Event& e)
 {
 	return true;
+}
+
+void UINode::deleteChild(UINode* child, bool recursive)
+{
+	for (int i = 0; i < children.size(); i++)
+	{
+		if (children[i] == child)
+		{
+			toRemove.push_back(child);
+		}
+	}
+	if (recursive)
+	{
+		for (const auto& c : child->children)
+		{
+            deleteChild(c, true);
+        }
+    }
+}
+
+void UINode::addChild(UINode* child)
+{
+    toAdd.push_back(child);
+}
+
+void UINode::checkAddRemove()
+{
+	for (const auto& c : toAdd)
+	{
+        children.push_back(c);
+    }
+    toAdd.clear();
+
+	for (const auto& c : toRemove)
+	{
+        children.erase(find(children.begin(), children.end(), c));
+        delete c;
+    }
+    toRemove.clear();
+
+	for (const auto& c : children)
+	{
+        c->checkAddRemove();
+	}
 }
 
 SDL_Point UINode::getDrawOffset(const SDL_Rect& container)

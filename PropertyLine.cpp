@@ -10,7 +10,7 @@ PropertyLine::PropertyLine(uint16_t y, std::string name, UINode* button) : UINod
 )
 {
 	this->name = name;
-	children.push_back(button);
+	addChild(button);
 }
 
 PropertyLine::~PropertyLine()

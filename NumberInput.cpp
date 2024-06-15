@@ -14,7 +14,7 @@ NumberInput::NumberInput(uint8_t* number) : UINode({
 })
 {
 	this->number = number;
-	children.push_back(
+	addChild(
 		new LayerIncrementorButton(65, 4, true,
 			[this]()
 			{
@@ -24,7 +24,7 @@ NumberInput::NumberInput(uint8_t* number) : UINode({
 			}
 		)
 	);
-	children.push_back(
+	addChild(
 		new LayerIncrementorButton(106, 4, false,
 			[this]()
 			{

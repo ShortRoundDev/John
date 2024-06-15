@@ -91,15 +91,28 @@ public:
 	bool handleKeyUp(const SDL_Event& e);
 	virtual bool onKeyUp(const SDL_Event& e);
 
+	bool handleTextInput(const SDL_Event& e);
+	virtual bool onTextInput(const SDL_Event& e);
+
+	bool isActive();
+
 	std::vector<UINode*> children;
 	
 	Style style;
 
 	int16_t scroll = 0;
 
+	void deleteChild(UINode* child, bool recursive = true);
+	void addChild(UINode* child);
+
+	void checkAddRemove();
+
 protected:
 	Texture* image;
 
 	SDL_Point getDrawOffset(const SDL_Rect& container);
+
+	std::vector<UINode*> toAdd;
+	std::vector<UINode*> toRemove;
 };
 

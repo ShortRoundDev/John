@@ -6,6 +6,7 @@
 #include "Checkbox.h"
 #include "NumberInput.h"
 #include "TextButton.h"
+#include "FloatInput.h"
 
 std::unique_ptr<PropertiesEditor> PropertiesEditor::instance;
 PropertiesEditor* PropertiesEditor::init()
@@ -43,38 +44,67 @@ void PropertiesEditor::clear()
 {
 	for (int i = 0; i < children.size(); i++)
 	{
-		delete children[i];
-		children[i] = nullptr;
+		deleteChild(children[i]);
 	}
-	children.clear();
 }
 
 void PropertiesEditor::addBoolean(std::string name, bool* value)
 {
-	children.push_back(
+	addChild(
 		new PropertyLine(
-			(uint16_t)children.size(), name,
+			(uint16_t)children.size() + toAdd.size() - toRemove.size(), name,
 			new Checkbox(value)
+		)
+	);
+}
+
+void PropertiesEditor::addBoolean(std::string name, bool initialValue, std::function<void(bool)> onClick)
+{
+	addChild(
+		new PropertyLine(
+			(uint16_t)children.size() + toAdd.size() - toRemove.size(), name,
+			new Checkbox(initialValue, onClick)
 		)
 	);
 }
 
 void PropertiesEditor::addText(std::string name, std::string* value)
 {
-	children.push_back(
+	addChild(
 		new PropertyLine(
-			(uint16_t)children.size(), name,
+			(uint16_t)children.size() + toAdd.size() - toRemove.size(), name,
 			new TextButton(value)
 		)
 	);
 }
 
+void PropertiesEditor::addText(std::string name, std::string initialValue, std::function<void(std::string)> onSave)
+{
+	addChild(
+		new PropertyLine(
+			(uint16_t)children.size() + toAdd.size() - toRemove.size(), name,
+			new TextButton(initialValue, onSave)
+		)
+	);
+}
+
+
 void PropertiesEditor::addNumber(std::string name, uint8_t* value)
 {
-	children.push_back(
+	addChild(
 		new PropertyLine(
-			(uint16_t)children.size(), name,
+			(uint16_t)children.size() + toAdd.size() - toRemove.size(), name,
 			new NumberInput(value)
 		)
 	);
+}
+
+void PropertiesEditor::addFloat(std::string name, float initialValue, std::function<void(float)> onChange)
+{
+	addChild(
+		new PropertyLine(
+            (uint16_t)children.size() + toAdd.size() - toRemove.size(), name,
+            new FloatInput(initialValue, onChange)
+        )
+    );
 }

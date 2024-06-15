@@ -5,7 +5,7 @@
 class CloseTextBoxButton : public UINode
 {
 public:
-	CloseTextBoxButton();
+	CloseTextBoxButton(UINode* parent);
 	~CloseTextBoxButton();
 
 	Texture* depressed;
@@ -13,4 +13,7 @@ public:
 
 	bool onMouseDown(const SDL_Event& e);
 	bool onMouseUp(const SDL_Event& e);
+
+private:
+	UINode* parent;
 };

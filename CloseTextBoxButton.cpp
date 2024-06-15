@@ -4,16 +4,18 @@
 
 #include "App.h"
 
-CloseTextBoxButton::CloseTextBoxButton() : UINode(
-	{
-		8, 4,
-		18, 18,
-		"Resources/UI/CloseButton",
-		CGA_TRANSPARENT,
-		StyleDirection::TOP,
-		StyleDirection::RIGHT
-	}
-)
+CloseTextBoxButton::CloseTextBoxButton(UINode* parent) :
+	UINode(
+		{
+			8, 4,
+			18, 18,
+			"Resources/UI/CloseButton",
+			CGA_TRANSPARENT,
+			StyleDirection::TOP,
+			StyleDirection::RIGHT
+		}
+	),
+	parent(parent)
 {
 	depressed = image;
 	if (!APP->tryLoadTexture("Resources/UI/CloseButtonPressed.png", "CloseButtonPressed", &pressed))
@@ -37,6 +39,7 @@ bool CloseTextBoxButton::onMouseDown(const SDL_Event& e)
 bool CloseTextBoxButton::onMouseUp(const SDL_Event& e)
 {
 	image = depressed;
-	APP->closeTextbox = true;
+	APP->rootDom->deleteChild(parent);
+	APP->setActive(nullptr);
 	return true;
 }

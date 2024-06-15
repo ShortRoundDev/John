@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "Texture.h"
+#include <nlohmann/json.hpp>
 
 constexpr int LAYER_FLOOR = 0;
 constexpr int LAYER_WALLS = 1;
@@ -76,7 +77,10 @@ public:
 	
 	//configs
 	std::string entityConfig;
+	nlohmann::json entityJsonConfig = nlohmann::json();
+
 	std::string tileConfig;
+	nlohmann::json tileJsonConfig = nlohmann::json();
 
 	// wall
 	bool isDoor = false;

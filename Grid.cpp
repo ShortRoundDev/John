@@ -10,6 +10,8 @@
 #include "EntityButton.h"
 #include "PropertiesEditor.h"
 
+#include <nlohmann/json.hpp>
+
 std::unique_ptr<Grid> Grid::instance = nullptr;
 
 Grid* Grid::init()
@@ -33,7 +35,7 @@ Grid::Grid() : UINode(
 			this->map[j][i] = MapTile();
 		}
 	}
-	children.push_back(new LayerEditor(this));
+	addChild(new LayerEditor(this));
 }
 
 Grid::~Grid()
@@ -374,6 +376,68 @@ bool Grid::onMouseDown(const SDL_Event& e)
 	return true;
 }
 
+bool getBoolOr(nlohmann::json const& json, std::string const& key, bool def)
+{
+	try
+	{
+        return json.at(key).get<bool>();
+    }
+	catch (nlohmann::json::out_of_range)
+	{
+        return def;
+    }
+	catch (nlohmann::json::type_error)
+	{
+        return def;
+    }
+	catch (nlohmann::json::exception)
+	{
+        return def;
+    }
+}
+
+float getFloatOr(nlohmann::json const& json, std::string const& key, bool def)
+{
+	try
+	{
+        return json.at(key).get<float>();
+    }
+	catch (nlohmann::json::out_of_range)
+	{
+        return def;
+    }
+	catch (nlohmann::json::type_error)
+	{
+        return def;
+    }
+	catch (nlohmann::json::exception)
+	{
+        return def;
+    }
+
+}
+
+std::string getStringOr(nlohmann::json const& json, std::string const& key, std::string def)
+{
+	try
+	{
+        return json.at(key).get<std::string>();
+    }
+	catch (nlohmann::json::out_of_range)
+	{
+        return def;
+    }
+	catch (nlohmann::json::type_error)
+	{
+        return def;
+    }
+	catch (nlohmann::json::exception)
+	{
+        return def;
+    }
+
+}
+
 bool Grid::onMouseUp(const SDL_Event& e)
 {
 	if (e.button.button == SDL_BUTTON_RIGHT)
@@ -386,8 +450,40 @@ bool Grid::onMouseUp(const SDL_Event& e)
 			{
 				return true;
 			}
+			auto metadata = APP->entityMetadata[tile->entityToken->entityId];
 			PROPS->clear();
-			PROPS->addText("config", &tile->entityConfig);
+			boolStack.clear();
+			floatStack.clear();
+			stringStack.clear();
+
+			for (auto field : metadata)
+			{
+
+				if (field.type == FieldType::JOHN_BOOL)
+				{
+					bool val = getBoolOr(tile->entityJsonConfig, field.name, false);
+					PROPS->addBoolean(field.name, val, [tile, field](bool value)
+						{
+							tile->entityJsonConfig[field.name] = value;
+						});
+                }
+				else if (field.type == FieldType::JOHN_FLOAT)
+				{
+					float val = getFloatOr(tile->entityJsonConfig, field.name, false);
+					PROPS->addFloat(field.name, val, [tile, field](float value)
+						{
+							tile->entityJsonConfig[field.name] = value;
+						});
+                }
+				else if (field.type == FieldType::JOHN_STRING)
+				{
+					std::string val = getStringOr(tile->entityJsonConfig, field.name, "");
+					PROPS->addText(field.name, val, [tile, field](std::string value)
+						{
+							tile->entityJsonConfig[field.name] = value;
+						});
+                }
+			}
 		}
 		else	// edit tile
 		{
@@ -744,19 +840,29 @@ char* Grid::mapStringPool(_Out_ size_t* stringPoolSize)
 	{
 		for (int x = 0; x < maxX; x++)
 		{
-			std::string tileConfig = map[x][y].tileConfig;
+			std::stringstream ss;
+			/*ss << map[x][y].tileJsonConfig;
+			std::string tileConfig = ss.str();
 			if (!tileConfig.empty())
 			{
 				(*stringPoolSize) += tileConfig.length() + 1;
-			}
+			}*/
 
-			std::string entConfig = map[x][y].entityConfig;
-			if (!entConfig.empty())
+			ss.clear();
+
+			if (!map[x][y].entityJsonConfig.is_null())
 			{
-				(*stringPoolSize) += entConfig.length() + 1;
+				ss << map[x][y].entityJsonConfig;
+				std::string entConfig = ss.str();
+				map[x][y].entityConfig = entConfig;
+				if (!entConfig.empty())
+				{
+					(*stringPoolSize) += entConfig.length() + 1;
+				}
 			}
 		}
 	}
+	*stringPoolSize += 1;
 
 	char* stringPool = (char*) calloc(*stringPoolSize + 2, sizeof(char));
 	uint64_t poolCursor = 1; // 0 initialize to null
@@ -801,7 +907,7 @@ uint8_t* Grid::concatenateMap(
 	_Out_ size_t* mapSize
 )
 {
-	uint8_t* rawMap = (uint8_t*)calloc(sizeof(LevelToken) + wallSize + entSize + stringPoolSize, sizeof(uint8_t));
+	uint8_t* rawMap = (uint8_t*)calloc(sizeof(LevelToken) + wallSize + entSize + stringPoolSize + 1, sizeof(uint8_t));
 
 	uint8_t* mapCursor = rawMap;
 

@@ -3,11 +3,14 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <functional>
+#include <optional>
 
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 
 #include "Texture.h"
+#include "EntityMetadata.h"
 
 #define APP (App::instance)
 
@@ -23,7 +26,6 @@ class EntityButton;
 class App
 {
 public:
-
 	static std::unique_ptr<App> instance;
 	static void init(std::string title);
 
@@ -37,6 +39,7 @@ public:
 
 	std::map<std::string, Texture*> textures;
 	std::map<uint16_t, std::string> idTextureMapping;
+	std::map<uint16_t, std::vector<EntityMetadataField>> entityMetadata;
 	std::map<SDL_Scancode, bool> keymap;
  
 	Texture* numbers;
@@ -59,6 +62,9 @@ public:
 	_Success_(return)
 	bool tryLoadTexture(_In_ std::string path, _In_ std::string alias, _Out_ Texture** texture);
 
+	_Success_(return)
+	bool tryLoadEntityConfig(std::string name, EntityMetadata& metadata);
+
 	int width;
 	int height;
 
@@ -69,10 +75,16 @@ public:
 	EntityButton* selectedEntity = nullptr;
 
 	void drawText(int x, int y, const char* text);
-	void drawTextBox(const SDL_Rect& container, const char* text, int cursor);
+	void drawTextBox(const SDL_Rect& container, const char* text, int cursor, bool drawCursor = true, bool wrap = true);
 
-	UINode* textbox = nullptr;
 	bool closeTextbox = false;
 	void showTextBox(std::string* text);
+	void showTextBox(std::string initialValue, std::function<void(std::string)> onSave);
+
+	void setActive(UINode* activeInputText);
+	bool isActive(UINode* node);
+
+private:
+	UINode* activeInputText = nullptr;
 };
 

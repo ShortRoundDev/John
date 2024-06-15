@@ -15,7 +15,7 @@ LayerEditor::LayerEditor(Grid* grid) : UINode(
 	})
 {
 	this->grid = grid;
-	children.push_back(
+	addChild(
 		new LayerIncrementorButton(
 			(uint16_t)64, (uint16_t)6,
 			true,
@@ -25,7 +25,7 @@ LayerEditor::LayerEditor(Grid* grid) : UINode(
 			}
 	));
 
-	children.push_back(
+	addChild(
 		new LayerIncrementorButton(
 			(uint16_t)108, (uint16_t)6,
 			false,
@@ -35,7 +35,7 @@ LayerEditor::LayerEditor(Grid* grid) : UINode(
 			}
 	));
 
-	children.push_back(
+	addChild(
 		new LayerIncrementorButton(
 			(uint16_t)64, (uint16_t)36,
 			true,
@@ -45,7 +45,7 @@ LayerEditor::LayerEditor(Grid* grid) : UINode(
 			}
 	));
 
-	children.push_back(
+	addChild(
 		new LayerIncrementorButton(
 			(uint16_t)108, (uint16_t)36,
 			false,

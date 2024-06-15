@@ -92,5 +92,10 @@ private:
 	);
 
 	bool writeSaveFile(std::wstring path, _In_ uint8_t* rawMap, size_t mapSize);
+
+	//dynamic memory stack
+	std::vector<bool> boolStack;
+	std::vector<float> floatStack;
+	std::vector<std::string> stringStack;
 };
 
