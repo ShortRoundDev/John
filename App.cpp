@@ -295,7 +295,6 @@ bool App::tryLoadEntityConfig(std::string name, EntityMetadata& metadata)
 	FILE* fp = fopen((name).c_str(), "r");
 	if (fp == NULL)
 	{
-        MessageBoxA(NULL, (name + ": " + strerror(errno)).c_str(), NULL, MB_OK);
         return false;
     }
 
@@ -303,7 +302,7 @@ bool App::tryLoadEntityConfig(std::string name, EntityMetadata& metadata)
 	{
 		buffer[127] = 0;
 		std::string line = buffer;
-		
+
 		auto pos = line.find('=');
 		if (pos == std::string::npos)
 		{

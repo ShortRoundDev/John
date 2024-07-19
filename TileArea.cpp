@@ -42,14 +42,24 @@ void TileArea::loadTiles()
 	{
 		buffer[127] = 0;
 		std::string line = buffer;
+		if (line[line.length() - 1] == '\n')
+		{
+			line = line.substr(0, line.length() - 1);
+		}
 
 		EntityMetadata metadata;
 		Texture* texture = nullptr;
-		if (APP->tryLoadEntityConfig("Resources/" + line + ".conf", metadata) && APP->tryLoadTexture(metadata.texture, line, &texture))
+		if (APP->tryLoadEntityConfig("Resources/tiles/" + line + ".conf", metadata) && APP->tryLoadTexture(metadata.texture, line, &texture))
 		{
 			APP->idTextureMapping[metadata.id] = line;
 			APP->entityMetadata[metadata.id] = metadata.fields;
 			auto tile = new Tile(i++, metadata.id, texture);
+			addChild(tile);
+		}
+		else if(APP->tryLoadTexture("Resources/tiles/" + line + ".png", line, &texture))
+		{
+			APP->idTextureMapping[atoi(line.c_str())] = line;
+			auto tile = new Tile(i++, atoi(line.c_str()), texture);
 			addChild(tile);
 		}
 	}
