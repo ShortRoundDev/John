@@ -99,6 +99,15 @@
     <ClCompile Include="FloatInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CompassButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RotationEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ArrowButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -177,6 +186,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FloatInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CompassButton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RotationEditor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ArrowButton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

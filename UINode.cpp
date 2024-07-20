@@ -3,6 +3,8 @@
 
 #include "Windows.h"
 
+#include <iostream>
+
 uint16_t UINode::PCT(uint16_t x)
 {
 	return x | PCT_BIT;
@@ -28,11 +30,15 @@ UINode::UINode(Style style)
 	image = NULL;
 	this->style = style;
 
+	static char msg[256];
+
 	if (!style.texturePath.empty())
 	{
 		if (!APP->tryLoadTexture(style.texturePath + ".png", style.texturePath, &image))
 		{
-			MessageBoxA(NULL, ("Failed to load image [" + style.texturePath + "]").c_str(), NULL, MB_OK);
+			std::cout << "Failed to load image [" + style.texturePath + "]" << std::endl;
+			SDL_GetErrorMsg(msg, 255);
+			std::cout << msg << std::endl;
 		}
 	}
 
@@ -71,7 +77,7 @@ void UINode::draw(const SDL_Rect& container)
 		calcX(style.width),
 		calcY(style.height),
 	};
-	
+
 	if (style.border.a != 0)
 	{
 		SDL_RenderSetScale(APP->renderer, 2.0f, 2.0f);
@@ -344,7 +350,7 @@ bool UINode::handleKeyUp(const SDL_Event& e)
 		if (!bubble) //allow siblings to halt propagation
 		{
             break;
-        
+
 		}
 	}
 

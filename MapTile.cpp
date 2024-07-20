@@ -23,8 +23,10 @@ MapTile::~MapTile()
 
 }
 
-void MapTile::set(int layer, int tileNum, Texture* tileTexture)
+void MapTile::set(int layer, int tileNum, Texture* tileTexture, int rotation)
 {
+	this->rotation = rotation;
+	token.rotation = rotation;
 	switch (layer)
 	{
 	case LAYER_FLOOR:

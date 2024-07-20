@@ -153,8 +153,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="ArrowButton.cpp" />
     <ClCompile Include="Checkbox.cpp" />
     <ClCompile Include="CloseTextBoxButton.cpp" />
+    <ClCompile Include="CompassButton.cpp" />
     <ClCompile Include="EntityArea.cpp" />
     <ClCompile Include="EntityButton.cpp" />
     <ClCompile Include="EntityMetadata.cpp" />
@@ -170,6 +172,7 @@
     <ClCompile Include="NumberInput.cpp" />
     <ClCompile Include="PropertiesEditor.cpp" />
     <ClCompile Include="PropertyLine.cpp" />
+    <ClCompile Include="RotationEditor.cpp" />
     <ClCompile Include="SaveButton.cpp" />
     <ClCompile Include="SectionHeader.cpp" />
     <ClCompile Include="TextBox.cpp" />
@@ -182,8 +185,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="ArrowButton.h" />
     <ClInclude Include="Checkbox.h" />
     <ClInclude Include="CloseTextBoxButton.h" />
+    <ClInclude Include="CompassButton.h" />
     <ClInclude Include="EntityArea.h" />
     <ClInclude Include="EntityButton.h" />
     <ClInclude Include="EntityMetadata.h" />
@@ -198,6 +203,7 @@
     <ClInclude Include="NumberInput.h" />
     <ClInclude Include="PropertiesEditor.h" />
     <ClInclude Include="PropertyLine.h" />
+    <ClInclude Include="RotationEditor.h" />
     <ClInclude Include="SaveButton.h" />
     <ClInclude Include="SectionHeader.h" />
     <ClInclude Include="TextBox.h" />

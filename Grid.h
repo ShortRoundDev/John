@@ -64,6 +64,9 @@ public:
 
 	void save(std::wstring path);
 
+	void setRotateVisible(bool rotate);
+	void setRotation(int direction);
+
 	int maxX = 10;
 	int maxY = 10;
 private:
@@ -97,5 +100,9 @@ private:
 	std::vector<bool> boolStack;
 	std::vector<float> floatStack;
 	std::vector<std::string> stringStack;
+
+	bool rotationVisible;
+	int direction;
+	Texture* arrow;
 };
 

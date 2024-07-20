@@ -23,8 +23,9 @@ typedef struct _WallToken
 	uint16_t ceiling;		// 6, 7
 	// --- Word 2 ---
 	uint8_t zone;			// 8
-	uint8_t reserved[7] =	// 9 - 15	// Reserved for future use
-		{ 0 }; 
+	uint8_t rotation;
+	uint8_t reserved[6] =	// 8 - 15	// Reserved for future use
+		{ 0 };
 	// --- Word 3 ---
 	char* message = 0;		// 16 - 23
 } WallToken;
@@ -56,7 +57,7 @@ typedef struct _LevelToken
 	// --- Word 4 ---
 	EntityToken* entities;  // 24 - 31
 	// --- Words 5 - 7 ---
-	uint8_t reserved[24];	// 32 - 55	// Reserved for future use
+	uint8_t reserved[24];	// 33 - 55	// Reserved for future use
 
 } LevelToken;
 
@@ -67,14 +68,13 @@ public:
 	MapTile();
 	~MapTile();
 
-	void draw(int x, int y);
-	void set(int layer, int tileNum, Texture* tileTexture);
-	
+	void set(int layer, int tileNum, Texture* tileTexture, int rotation);
+
 	Texture* texture[3];
 	Texture* entityTexture = nullptr;
 	WallToken token;
 	EntityToken* entityToken;
-	
+
 	//configs
 	std::string entityConfig;
 	nlohmann::json entityJsonConfig = nlohmann::json();
@@ -87,6 +87,7 @@ public:
 
 	// flood
 	int floodToken;
-	
+	int rotation = 0;
+
 };
 

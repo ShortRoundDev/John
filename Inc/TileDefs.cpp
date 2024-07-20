@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "TileDefs.h"
-IBrush* MakeSimpleWall(WallToken const& token);
-IBrush* MakeSimpleFloor(WallToken const& token);
-IBrush* MakeSimpleCeiling(WallToken const& token);
-IBrush* CreateWall(WallToken const& token)
+IBrush* MakeSimpleWall(WallToken const& token, int x, int y, Texture const* texture);
+IBrush* MakeSimpleFloor(WallToken const& token, int x, int y, Texture const* texture);
+IBrush* MakeSimpleCeiling(WallToken const& token, int x, int y, Texture const* texture);
+IBrush* CreateWall(WallToken const& token, int x, int y, Texture const* texture)
 {
     switch (static_cast<TileDefs>(token.wallType))
     {
@@ -13,12 +13,13 @@ IBrush* CreateWall(WallToken const& token)
     case TileDefs::ID_BONGO1:
     case TileDefs::ID_BONGO2:
     case TileDefs::ID_CONCRETE:
-        return MakeSimpleWall(token);
+    default:
+        return MakeSimpleWall(token, x, y, texture);
     }
     return nullptr;
 }
 
-IBrush* CreateFloor(WallToken const& token)
+IBrush* CreateFloor(WallToken const& token, int x, int y, Texture const* texture)
 {
     switch (static_cast<TileDefs>(token.floor))
     {
@@ -28,12 +29,13 @@ IBrush* CreateFloor(WallToken const& token)
     case TileDefs::ID_BONGO1:
     case TileDefs::ID_BONGO2:
     case TileDefs::ID_CONCRETE:
-        return MakeSimpleFloor(token);
+    default:
+        return MakeSimpleFloor(token, x, y, texture);
     }
     return nullptr;
 }
 
-IBrush* CreateCeiling(WallToken const& token)
+IBrush* CreateCeiling(WallToken const& token, int x, int y, Texture const* texture)
 {
     switch (static_cast<TileDefs>(token.ceiling))
     {
@@ -43,7 +45,8 @@ IBrush* CreateCeiling(WallToken const& token)
     case TileDefs::ID_BONGO1:
     case TileDefs::ID_BONGO2:
     case TileDefs::ID_CONCRETE:
-        return MakeSimpleCeiling(token);
+    default:
+        return MakeSimpleCeiling(token, x, y, texture);
     }
     return nullptr;
 }

@@ -9,6 +9,7 @@
 #include "LayerEditor.h"
 #include "EntityButton.h"
 #include "PropertiesEditor.h"
+#include "RotationEditor.h"
 
 #include <nlohmann/json.hpp>
 
@@ -36,6 +37,11 @@ Grid::Grid() : UINode(
 		}
 	}
 	addChild(new LayerEditor(this));
+	addChild(new RotationEditor);
+	if (!APP->tryLoadTexture("Resources/UI/Direction.png", "arrow", &arrow))
+	{
+        std::cout << SDL_GetError() << std::endl;
+	}
 }
 
 Grid::~Grid()
@@ -125,6 +131,14 @@ void Grid::drawTiles(const SDL_Rect& container)
 						SDL_SetTextureAlphaMod(tile.entityTexture->texture, opacity);
 						SDL_RenderCopy(APP->renderer, tile.entityTexture->texture, &tile.entityTexture->src, &dst);
 						SDL_SetTextureAlphaMod(tile.entityTexture->texture, 255);
+					}
+
+					if (rotationVisible && getCurrentLayer() == 1 && tile.token.wallType != 0)
+					{
+						SDL_SetRenderDrawBlendMode(APP->renderer, SDL_BLENDMODE_BLEND);
+						SDL_SetTextureAlphaMod(arrow->texture, 128);
+						SDL_RenderCopyEx(APP->renderer, arrow->texture, &arrow->src, &dst, tile.rotation * 90, nullptr, SDL_RendererFlip::SDL_FLIP_NONE);
+						SDL_SetTextureAlphaMod(arrow->texture, 255);
 					}
 				}
 				// Draw zone selectors
@@ -534,7 +548,7 @@ SDL_Point Grid::tileFromMouse()
 	int x, y;
 
 	SDL_GetMouseState(&x, &y);
-	
+
 	SDL_Point mouse = {
 		x,
 		y
@@ -586,11 +600,11 @@ void Grid::placeTile(int x, int y)
 		maxY = y + 1;
 	if (getCurrentLayer() != LAYER_GRID)
 	{
-		map[x][y].set(getCurrentLayer(), APP->selectedTile, APP->selectedTileTexture);
+		map[x][y].set(getCurrentLayer(), APP->selectedTile, APP->selectedTileTexture, this->direction);
 	}
 	else
 	{
-		map[x][y].set(getCurrentLayer(), getCurrentZone(), nullptr);
+		map[x][y].set(getCurrentLayer(), getCurrentZone(), nullptr, this->direction);
 	}
 	lastTilePlaced = { x, y };
 }
@@ -676,12 +690,12 @@ void Grid::removeTile(int x, int y, bool all)
 	{
 		for (int i = 0; i < 3; i++)
 		{
-			map[x][y].set(i, 0, nullptr);
+			map[x][y].set(i, 0, nullptr, 0);
 		}
 	}
 	else
 	{
-		map[x][y].set(getCurrentLayer(), 0, nullptr);
+		map[x][y].set(getCurrentLayer(), 0, nullptr, 0);
 	}
 
 	int _maxX = 0, _maxY = 0;
@@ -749,7 +763,7 @@ void Grid::removeEntity(int x, int y)
 	if (map[x][y].entityToken == nullptr)
 		return;
 #pragma message ("WARNING: Potential memory leak in RemoveEntity. Need to distinguish between a file-loaded entity and a malloc'd entity!!!")
-	//delete map[x][y].entityToken;		// 
+	//delete map[x][y].entityToken;		//
 	map[x][y].entityToken = nullptr;
 	map[x][y].entityConfig = "";
 	map[x][y].entityTexture = nullptr;	// lose the reference, but the texture should probably still live
@@ -770,7 +784,7 @@ void Grid::save(std::wstring path)
 		walls,		wallSize,
 		entities,	entitySize,
 		stringPool, stringPoolSize,
-		
+
 		&mapSize
 	);
 
@@ -780,6 +794,16 @@ void Grid::save(std::wstring path)
 
 	writeSaveFile(path, rawMap, mapSize);
 	rawMap = nullptr;
+}
+
+void Grid::setRotateVisible(bool rotate)
+{
+	this->rotationVisible = rotate;
+}
+
+void Grid::setRotation(int direction)
+{
+	this->direction = direction;
 }
 
 WallToken* Grid::mapWallTokens(_Out_ size_t* wallSize)
@@ -903,7 +927,7 @@ uint8_t* Grid::concatenateMap(
 	_In_ WallToken* walls,		size_t wallSize,
 	_In_ EntityToken* entities,	size_t entSize,
 	_In_ char* stringPool,		size_t stringPoolSize,
-	
+
 	_Out_ size_t* mapSize
 )
 {
@@ -912,10 +936,10 @@ uint8_t* Grid::concatenateMap(
 	uint8_t* mapCursor = rawMap;
 
 	LevelToken* header = (LevelToken*)mapCursor;
-	
+
 	*header = {
 		{'H', 'A', 'M'}, // Watermark
-		2,	//version #
+		3,	//version #
 		(uint16_t)maxX,	// width
 		(uint16_t)maxY,	// height
 		entSize/sizeof(EntityToken), // total Entities
@@ -937,7 +961,7 @@ uint8_t* Grid::concatenateMap(
 	}
 
 	mapCursor += wallSize;
-	// These can be null. Walls can never be null	
+	// These can be null. Walls can never be null
 
 	EntityToken* entityPointer = (EntityToken*) mapCursor;
 	if (entSize != 0)
@@ -960,7 +984,7 @@ uint8_t* Grid::concatenateMap(
 		memcpy(mapCursor, stringPool, stringPoolSize);
 		mapCursor += stringPoolSize;
 	}
-	
+
 	// free
 	free(walls);
 	// These can be null. Walls can never be null

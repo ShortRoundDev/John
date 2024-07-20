@@ -26,7 +26,7 @@ namespace IDGen
             writer.WriteLine("{");
             foreach (var id in def)
             {
-                writer.WriteLine($"    {id.Value.FullID()},");
+                writer.WriteLine($"    {id.Value.FullID()} = {id.Key},");
             }
             writer.WriteLine("};\n");
         }
@@ -54,9 +54,9 @@ namespace IDGen
                 Console.WriteLine("Writing ent defs to " + Path.GetFullPath("Inc/TileDefs.h"));
                 PrintDefHeaders(writer, tiles, "TileDefs");
                 writer.WriteLine("class IBrush;");
-                writer.WriteLine("IBrush* CreateWall(WallToken const& token);");
-                writer.WriteLine("IBrush* CreateFloor(WallToken const& token);");
-                writer.WriteLine("IBrush* CreateCeiling(WallToken const& token);");
+                writer.WriteLine("IBrush* CreateWall(WallToken const& token, int x, int y, Texture const* texture);");
+                writer.WriteLine("IBrush* CreateFloor(WallToken const& token, int x, int y, Texture const* texture);");
+                writer.WriteLine("IBrush* CreateCeiling(WallToken const& token, int x, int y, Texture const* texture);");
                 writer.WriteLine();
                 writer.Flush();
             }
@@ -74,9 +74,9 @@ namespace IDGen
                 Console.WriteLine("Writing ent defs to " + Path.GetFullPath("Inc/TileDefs.cpp"));
                 writer.WriteLine("#include \"stdafx.h\"");
                 writer.WriteLine("#include \"TileDefs.h\"");
-                writer.WriteLine("IBrush* MakeSimpleWall(WallToken const& token);");
-                writer.WriteLine("IBrush* MakeSimpleFloor(WallToken const& token);");
-                writer.WriteLine("IBrush* MakeSimpleCeiling(WallToken const& token);");
+                writer.WriteLine("IBrush* MakeSimpleWall(WallToken const& token, int x, int y, Texture const* texture);");
+                writer.WriteLine("IBrush* MakeSimpleFloor(WallToken const& token, int x, int y, Texture const* texture);");
+                writer.WriteLine("IBrush* MakeSimpleCeiling(WallToken const& token, int x, int y, Texture const* texture);");
                 PrintTileSwitchCase(writer, "Wall", "wallType");
                 writer.WriteLine();
                 PrintTileSwitchCase(writer, "Floor", "floor");
@@ -88,7 +88,7 @@ namespace IDGen
 
         static void PrintTileSwitchCase(StreamWriter writer, string name, string field)
         {
-            writer.WriteLine($"IBrush* Create{name}(WallToken const& token)");
+            writer.WriteLine($"IBrush* Create{name}(WallToken const& token, int x, int y, Texture const* texture)");
             writer.WriteLine("{");
             writer.WriteLine($"    switch (static_cast<TileDefs>(token.{field}))");
             writer.WriteLine("    {");
@@ -96,7 +96,8 @@ namespace IDGen
             {
                 writer.WriteLine($"    case TileDefs::{tile.Value.FullID()}:");
             }
-            writer.WriteLine($"        return MakeSimple{name}(token);");
+            writer.WriteLine("    default:");
+            writer.WriteLine($"        return MakeSimple{name}(token, x, y, texture);");
             writer.WriteLine("    }");
             writer.WriteLine("    return nullptr;");
             writer.WriteLine("}");

@@ -4,7 +4,7 @@
 
 enum class EntDefs : uint16_t
 {
-    ID_REDNECK,
+    ID_REDNECK = 1000,
 };
 
 class IObject;
