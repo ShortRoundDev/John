@@ -54,7 +54,7 @@ namespace IDGen
                 Console.WriteLine("Writing ent defs to " + Path.GetFullPath("Inc/TileDefs.h"));
                 PrintDefHeaders(writer, tiles, "TileDefs");
                 writer.WriteLine("class IBrush;");
-                writer.WriteLine("IBrush* CreateWall(WallToken const& token, int x, int y, Texture const* texture);");
+                writer.WriteLine("BrushPtr CreateWall(WallToken const& token, int x, int y, Texture const* texture);");
                 writer.WriteLine("IBrush* CreateFloor(WallToken const& token, int x, int y, Texture const* texture);");
                 writer.WriteLine("IBrush* CreateCeiling(WallToken const& token, int x, int y, Texture const* texture);");
                 writer.WriteLine();
