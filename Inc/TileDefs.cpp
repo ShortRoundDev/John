@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "TileDefs.h"
-IBrush* MakeSimpleWall(WallToken const& token, int x, int y, Texture const* texture);
-IBrush* MakeSimpleFloor(WallToken const& token, int x, int y, Texture const* texture);
-IBrush* MakeSimpleCeiling(WallToken const& token, int x, int y, Texture const* texture);
+IBrush* MakeSimpleWall(WallToken const& token, int x, int y, TextureCPtr texture);
+IBrush* MakeSimpleFloor(WallToken const& token, int x, int y, TextureCPtr texture);
+IBrush* MakeSimpleCeiling(WallToken const& token, int x, int y, TextureCPtr texture);
 IBrush* CreateWall(WallToken const& token, int x, int y, Texture const* texture)
 {
     switch (static_cast<TileDefs>(token.wallType))

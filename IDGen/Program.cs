@@ -54,9 +54,9 @@ namespace IDGen
                 Console.WriteLine("Writing ent defs to " + Path.GetFullPath("Inc/TileDefs.h"));
                 PrintDefHeaders(writer, tiles, "TileDefs");
                 writer.WriteLine("class IBrush;");
-                writer.WriteLine("BrushPtr CreateWall(WallToken const& token, int x, int y, Texture const* texture);");
-                writer.WriteLine("IBrush* CreateFloor(WallToken const& token, int x, int y, Texture const* texture);");
-                writer.WriteLine("IBrush* CreateCeiling(WallToken const& token, int x, int y, Texture const* texture);");
+                writer.WriteLine("IBrush* CreateWall(WallToken const& token, int x, int y, TextureCPtr texture);");
+                writer.WriteLine("IBrush* CreateFloor(WallToken const& token, int x, int y, TextureCPtr texture);");
+                writer.WriteLine("IBrush* CreateCeiling(WallToken const& token, int x, int y, TextureCPtr* texture);");
                 writer.WriteLine();
                 writer.Flush();
             }
@@ -74,9 +74,9 @@ namespace IDGen
                 Console.WriteLine("Writing ent defs to " + Path.GetFullPath("Inc/TileDefs.cpp"));
                 writer.WriteLine("#include \"stdafx.h\"");
                 writer.WriteLine("#include \"TileDefs.h\"");
-                writer.WriteLine("IBrush* MakeSimpleWall(WallToken const& token, int x, int y, Texture const* texture);");
-                writer.WriteLine("IBrush* MakeSimpleFloor(WallToken const& token, int x, int y, Texture const* texture);");
-                writer.WriteLine("IBrush* MakeSimpleCeiling(WallToken const& token, int x, int y, Texture const* texture);");
+                writer.WriteLine("IBrush* MakeSimpleWall(WallToken const& token, int x, int y, TextureCPtr texture);");
+                writer.WriteLine("IBrush* MakeSimpleFloor(WallToken const& token, int x, int y, TextureCPtr texture);");
+                writer.WriteLine("IBrush* MakeSimpleCeiling(WallToken const& token, int x, int y, TextureCPtr texture);");
                 PrintTileSwitchCase(writer, "Wall", "wallType");
                 writer.WriteLine();
                 PrintTileSwitchCase(writer, "Floor", "floor");

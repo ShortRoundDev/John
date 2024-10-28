@@ -13,7 +13,7 @@ enum class TileDefs : uint16_t
 };
 
 class IBrush;
-BrushPtr CreateWall(WallToken const& token, int x, int y, Texture const* texture);
-IBrush* CreateFloor(WallToken const& token, int x, int y, Texture const* texture);
-IBrush* CreateCeiling(WallToken const& token, int x, int y, Texture const* texture);
+IBrush* CreateWall(WallToken const& token, int x, int y, TextureCPtr texture);
+IBrush* CreateFloor(WallToken const& token, int x, int y, TextureCPtr texture);
+IBrush* CreateCeiling(WallToken const& token, int x, int y, TextureCPtr* texture);
 
