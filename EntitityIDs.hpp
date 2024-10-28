@@ -1,6 +1,6 @@
 Collecting entities
 Collecting tiles
-Writing ent defs to D:\source\repos\John\Inc\EntDefs.h
-Writing ent defs to D:\source\repos\John\Inc\TileDefs.h
-Writing ent defs to D:\source\repos\John\Inc\EntDefs.cpp
-Writing ent defs to D:\source\repos\John\Inc\TileDefs.cpp
+Writing ent defs to C:\Users\colli\source\repos\shortrounddev\john\Inc\EntDefs.h
+Writing ent defs to C:\Users\colli\source\repos\shortrounddev\john\Inc\TileDefs.h
+Writing ent defs to C:\Users\colli\source\repos\shortrounddev\john\Inc\EntDefs.cpp
+Writing ent defs to C:\Users\colli\source\repos\shortrounddev\john\Inc\TileDefs.cpp

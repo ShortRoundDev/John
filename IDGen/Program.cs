@@ -6,19 +6,19 @@ namespace IDGen
     internal static class Program
     {
         static Dictionary<int, string> entities = new Dictionary<int, string>();
-        static Dictionary<int, string> tiles = new Dictionary<int, string>();
+        static Dictionary<int, (string, string?)> tiles = new Dictionary<int, (string, string?)>();
 
         static void Main(string[] args)
         {
             Console.WriteLine("Collecting entities");
             CollectIDs("Resources/entities.conf", "entities", entities);
             Console.WriteLine("Collecting tiles");
-            CollectIDs("Resources/tiles.conf", "tiles", tiles);
+            CollectTiles("Resources/tiles.conf", "tiles", tiles);
 
             PrintDefs();
         }
 
-        static void PrintDefHeaders(StreamWriter writer, Dictionary<int, string> def, string path)
+        static void PrintDefHeaders(StreamWriter writer, IEnumerable<(int, string)> def, string path)
         {
             writer.WriteLine("#pragma once\n");
             writer.WriteLine("#include \"JohnMapFile.h\"\n");
@@ -26,7 +26,7 @@ namespace IDGen
             writer.WriteLine("{");
             foreach (var id in def)
             {
-                writer.WriteLine($"    {id.Value.FullID()} = {id.Key},");
+                writer.WriteLine($"    {id.Item2.FullID()} = {id.Item1},");
             }
             writer.WriteLine("};\n");
         }
@@ -43,7 +43,7 @@ namespace IDGen
             using (var writer = new StreamWriter($"Inc/EntDefs.h")) {
                 // print working directory:
                 Console.WriteLine("Writing ent defs to " + Path.GetFullPath("Inc/EntDefs.h"));
-                PrintDefHeaders(writer, entities, "EntDefs");
+                PrintDefHeaders(writer, entities.Select(kvp => (kvp.Key, kvp.Value)), "EntDefs");
                 writer.WriteLine("class IObject;\n");
                 writer.WriteLine();
                 writer.WriteLine("IObject* CreateEntity(EntityToken const& token);");
@@ -52,11 +52,11 @@ namespace IDGen
             using (var writer = new StreamWriter($"./Inc/TileDefs.h"))
             {
                 Console.WriteLine("Writing ent defs to " + Path.GetFullPath("Inc/TileDefs.h"));
-                PrintDefHeaders(writer, tiles, "TileDefs");
+                PrintDefHeaders(writer, tiles.Select(kvp => (kvp.Key, kvp.Value.Item2 ?? kvp.Value.Item1)), "TileDefs");
                 writer.WriteLine("class IBrush;");
                 writer.WriteLine("IBrush* CreateWall(WallToken const& token, int x, int y, TextureCPtr texture);");
                 writer.WriteLine("IBrush* CreateFloor(WallToken const& token, int x, int y, TextureCPtr texture);");
-                writer.WriteLine("IBrush* CreateCeiling(WallToken const& token, int x, int y, TextureCPtr* texture);");
+                writer.WriteLine("IBrush* CreateCeiling(WallToken const& token, int x, int y, TextureCPtr texture);");
                 writer.WriteLine();
                 writer.Flush();
             }
@@ -88,13 +88,27 @@ namespace IDGen
 
         static void PrintTileSwitchCase(StreamWriter writer, string name, string field)
         {
-            writer.WriteLine($"IBrush* Create{name}(WallToken const& token, int x, int y, Texture const* texture)");
+            var custom = tiles.Where(tile => tile.Value.Item2 != null);
+            foreach (var tile in custom)
+            {
+                writer.WriteLine("IBrush* Make" + tile.Value.Item2!.PascalCase() + "(WallToken const& token, int x, int y);");
+            }
+
+            writer.WriteLine($"IBrush* Create{name}(WallToken const& token, int x, int y, TextureCPtr texture)");
             writer.WriteLine("{");
             writer.WriteLine($"    switch (static_cast<TileDefs>(token.{field}))");
             writer.WriteLine("    {");
-            foreach (var tile in tiles)
+
+            foreach(var tile in custom)
             {
-                writer.WriteLine($"    case TileDefs::{tile.Value.FullID()}:");
+                writer.WriteLine($"    case TileDefs::{tile.Value.Item2!.FullID()}:");
+                    writer.WriteLine($"        return Make{tile.Value.Item2!.PascalCase()}(token, x, y);");
+            }
+
+            var nonCustom = tiles.Where(tile => tile.Value.Item2 == null);
+            foreach (var tile in nonCustom)
+            {
+                writer.WriteLine($"    case TileDefs::{tile.Value.Item1.FullID()}:");
             }
             writer.WriteLine("    default:");
             writer.WriteLine($"        return MakeSimple{name}(token, x, y, texture);");
@@ -132,6 +146,24 @@ namespace IDGen
                 }
                 var id = UInt16.Parse(idStr[1]);
                 def.Add(id, entity.PascalCase());
+            }
+        }
+
+        static void CollectTiles(string fileName, string path, Dictionary<int, (string, string?)> def)
+        {
+            var entities = File.ReadAllLines(fileName);
+            foreach (var entity in entities)
+            {
+                var config = File.ReadAllLines($"Resources/{path}/{entity}.conf");
+                var idStr = config.Where(config => config.StartsWith("#id=")).FirstOrDefault()?.Split("=");
+                var custom = config.Where(config => config.StartsWith("#custom=")).FirstOrDefault()?.Split("=");
+                if (idStr == null || idStr.Length < 2)
+                {
+                    continue;
+                }
+                var id = UInt16.Parse(idStr[1]);
+                var customValue = (custom?.Length ?? 0) > 1 ? custom![1] : null;
+                def.Add(id, (entity.PascalCase(), customValue));
             }
         }
 

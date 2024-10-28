@@ -105,7 +105,7 @@ public:
         SDL_Rect clipRect = {
                 .x = container.x + 140,
                 .y = container.y + 5,
-                .w = 84,
+                .w = 80,
                 .h = 32
         };
         SDL_RenderSetClipRect(APP->renderer, &clipRect);
